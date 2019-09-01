@@ -292,7 +292,7 @@ public class H2Dialect implements SQLDialect {
 	}
 
 	@Override
-	public String buildCreateSQL(ComplexType type) {
+	public String buildCreateSQL(ComplexType type, boolean compact) {
 		StringBuilder builder = new StringBuilder();
 		for (Element<?> child : TypeUtils.getAllChildren(type)) {
 			Value<Boolean> generatedProperty = child.getProperty(GeneratedProperty.getInstance());
@@ -413,7 +413,7 @@ public class H2Dialect implements SQLDialect {
 	}
 	
 	@Override
-	public String buildInsertSQL(ComplexContent values) {
+	public String buildInsertSQL(ComplexContent values, boolean compact) {
 		// TODO Auto-generated method stub
 		return null;
 	}
