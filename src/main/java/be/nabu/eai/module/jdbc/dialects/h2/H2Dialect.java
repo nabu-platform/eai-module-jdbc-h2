@@ -29,6 +29,7 @@ import be.nabu.libs.types.properties.FormatProperty;
 import be.nabu.libs.types.properties.GeneratedProperty;
 import be.nabu.libs.types.properties.MinOccursProperty;
 import be.nabu.libs.types.properties.NameProperty;
+import be.nabu.libs.types.properties.PrimaryKeyProperty;
 import be.nabu.libs.types.properties.UniqueProperty;
 
 public class H2Dialect implements SQLDialect {
@@ -294,13 +295,6 @@ public class H2Dialect implements SQLDialect {
 	@Override
 	public String buildCreateSQL(ComplexType type, boolean compact) {
 		StringBuilder builder = new StringBuilder();
-		for (Element<?> child : TypeUtils.getAllChildren(type)) {
-			Value<Boolean> generatedProperty = child.getProperty(GeneratedProperty.getInstance());
-			if (generatedProperty != null && generatedProperty.getValue() != null && generatedProperty.getValue()) {
-				String seqName = "seq_" + EAIRepositoryUtils.uncamelify(getName(type.getProperties())) + "_" + EAIRepositoryUtils.uncamelify(child.getName()); 
-				builder.append("create sequence ").append(seqName).append(";\n");
-			}
-		}
 		builder.append("create table " + EAIRepositoryUtils.uncamelify(getName(type.getProperties())) + " (\n");
 		boolean first = true;
 		for (Element<?> child : TypeUtils.getAllChildren(type)) {
@@ -333,7 +327,12 @@ public class H2Dialect implements SQLDialect {
 			}
 			
 			Value<Boolean> generatedProperty = child.getProperty(GeneratedProperty.getInstance());
-			if (child.getName().equals("id")) {
+			if (generatedProperty != null && generatedProperty.getValue() != null && generatedProperty.getValue()) {
+				builder.append(" auto_increment");
+			}
+
+			Value<Boolean> primaryKeyProperty = child.getProperty(PrimaryKeyProperty.getInstance());
+			if (primaryKeyProperty != null && primaryKeyProperty.getValue() != null && primaryKeyProperty.getValue()) {
 				builder.append(" primary key");
 			}
 			else {
@@ -348,10 +347,6 @@ public class H2Dialect implements SQLDialect {
 				builder.append(" unique");
 			}
 			
-			if (generatedProperty != null && generatedProperty.getValue() != null && generatedProperty.getValue()) {
-				String seqName = "seq_" + EAIRepositoryUtils.uncamelify(getName(type.getProperties())) + "_" + EAIRepositoryUtils.uncamelify(child.getName());
-				builder.append(" default " + seqName + ".nextval");
-			}
 		}
 		for (Element<?> child : TypeUtils.getAllChildren(type)) {
 			Value<String> foreignKey = child.getProperty(ForeignKeyProperty.getInstance());
