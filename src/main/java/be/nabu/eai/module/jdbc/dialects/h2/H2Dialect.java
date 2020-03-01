@@ -14,9 +14,9 @@ import be.nabu.libs.evaluator.QueryParser;
 import be.nabu.libs.evaluator.QueryPart;
 import be.nabu.libs.property.ValueUtils;
 import be.nabu.libs.property.api.Value;
+import be.nabu.libs.services.jdbc.JDBCUtils;
 import be.nabu.libs.services.jdbc.api.SQLDialect;
 import be.nabu.libs.types.DefinedTypeResolverFactory;
-import be.nabu.libs.types.TypeUtils;
 import be.nabu.libs.types.api.ComplexContent;
 import be.nabu.libs.types.api.ComplexType;
 import be.nabu.libs.types.api.DefinedType;
@@ -297,7 +297,7 @@ public class H2Dialect implements SQLDialect {
 		StringBuilder builder = new StringBuilder();
 		builder.append("create table " + EAIRepositoryUtils.uncamelify(getName(type.getProperties())) + " (\n");
 		boolean first = true;
-		for (Element<?> child : TypeUtils.getAllChildren(type)) {
+		for (Element<?> child : JDBCUtils.getFieldsInTable(type)) {
 			if (first) {
 				first = false;
 			}
@@ -348,7 +348,7 @@ public class H2Dialect implements SQLDialect {
 			}
 			
 		}
-		for (Element<?> child : TypeUtils.getAllChildren(type)) {
+		for (Element<?> child : JDBCUtils.getFieldsInTable(type)) {
 			Value<String> foreignKey = child.getProperty(ForeignKeyProperty.getInstance());
 			if (foreignKey != null) {
 				String[] split = foreignKey.getValue().split(":");
