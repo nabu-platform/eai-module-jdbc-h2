@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +35,8 @@ import be.nabu.libs.types.properties.UniqueProperty;
 
 public class H2Dialect implements SQLDialect {
 
+	private static List<String> reserved = Arrays.asList("interval"); //"from", 
+	
 	public static void main(String...args) throws ParseException {
 		System.out.println(rewriteMerge("insert into ~nodes (\n" + 
 				"	id,\n" + 
@@ -116,7 +119,7 @@ public class H2Dialect implements SQLDialect {
 				throw new RuntimeException(e);
 			}
 		}
-		return sql;
+		return rewriteReserved(sql);
 	}
 	
 	private static boolean validate(List<QueryPart> tokens, int offset, String value) {
@@ -295,7 +298,7 @@ public class H2Dialect implements SQLDialect {
 	@Override
 	public String buildCreateSQL(ComplexType type, boolean compact) {
 		StringBuilder builder = new StringBuilder();
-		builder.append("create table " + EAIRepositoryUtils.uncamelify(getName(type.getProperties())) + " (\n");
+		builder.append("create table " + restrict(EAIRepositoryUtils.uncamelify(getName(type.getProperties()))) + " (\n");
 		boolean first = true;
 		for (Element<?> child : JDBCUtils.getFieldsInTable(type)) {
 			if (first) {
@@ -319,10 +322,10 @@ public class H2Dialect implements SQLDialect {
 				else if (!format.equals("date") && !format.equals("time")) {
 					format = "timestamp";
 				}
-				builder.append("\t" + EAIRepositoryUtils.uncamelify(child.getName())).append(" ").append(format);
+				builder.append("\t" + restrict(EAIRepositoryUtils.uncamelify(child.getName()))).append(" ").append(format);
 			}
 			else {
-				builder.append("\t" + EAIRepositoryUtils.uncamelify(child.getName())).append(" ")
+				builder.append("\t" + restrict(EAIRepositoryUtils.uncamelify(child.getName()))).append(" ")
 					.append(getPredefinedSQLType(((SimpleType<?>) child.getType()).getInstanceClass()));
 			}
 			
@@ -358,7 +361,7 @@ public class H2Dialect implements SQLDialect {
 					if (referencedName == null) {
 						referencedName = resolve.getName();
 					}
-					builder.append(",\n\tforeign key (" + EAIRepositoryUtils.uncamelify(child.getName()) + ") references " + EAIRepositoryUtils.uncamelify(referencedName) + "(" + split[1] + ")");
+					builder.append(",\n\tforeign key (" + restrict(EAIRepositoryUtils.uncamelify(child.getName())) + ") references " + restrict(EAIRepositoryUtils.uncamelify(referencedName)) + "(" + split[1] + ")");
 				}
 			}
 		}
@@ -372,8 +375,9 @@ public class H2Dialect implements SQLDialect {
 			// best practice to use application level limits on text
 			return "varchar";
 		}
+		// the interval data type in h2 seems to be limited to a specific duration (e.g. interval year, interval month...)
 		else if (Duration.class.isAssignableFrom(instanceClass)) {
-			return "interval";
+			return "varchar";
 		}
 		else if (byte[].class.isAssignableFrom(instanceClass)) {
 			return "binary";
@@ -413,4 +417,42 @@ public class H2Dialect implements SQLDialect {
 		return null;
 	}
 
+	// same problem as oracle: it's all caps, not case insensitive
+	@Override
+	public String standardizeTablePattern(String tableName) {
+		return tableName == null ? null : tableName.toUpperCase();
+	}
+	
+	private static String rewriteReserved(String sql) {
+		if (sql != null) {
+			StringBuilder builder = new StringBuilder();
+			boolean inString = false;
+			String[] split = sql.split("\\b");
+			for (int i = 0; i < split.length; i++) {
+				String part = split[i];
+				boolean change = (part.length() - part.replace("'", "").length()) % 2 == 1;
+				if (change) {
+					inString = !inString;
+				}
+				if (inString || i == 0 || split[i - 1].trim().endsWith(":") || (i < split.length - 1 && split[i + 1].trim().startsWith("("))) {
+					builder.append(part);
+				}
+				else {
+					builder.append(restrict(part));
+				}
+			}
+			sql = builder.toString();
+		}
+		return sql;
+	}
+	
+	private static String restrict(String columnName) {
+		if (columnName.length() > 30) {
+			columnName = columnName.substring(0, 30);
+		}
+		if (reserved.indexOf(columnName) >= 0) {
+			columnName = "\"" + columnName + "\"";
+		}
+		return columnName;
+	}
 }
