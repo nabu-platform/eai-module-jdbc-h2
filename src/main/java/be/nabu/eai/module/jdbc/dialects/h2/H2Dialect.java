@@ -278,11 +278,11 @@ public class H2Dialect implements SQLDialect {
 
 	@Override
 	public String limit(String sql, Long offset, Integer limit) {
-		if (offset != null) {
-			sql = sql + " OFFSET " + offset;
-		}
 		if (limit != null) {
 			sql = sql + " LIMIT " + limit;
+		}
+		if (offset != null) {
+			sql = sql + " OFFSET " + offset;
 		}
 		return sql;
 	}
