@@ -27,7 +27,11 @@ public class H2FileWizard implements JDBCPoolWizard<H2FileProperties> {
 		H2FileProperties properties = new H2FileProperties();
 		String jdbcUrl = pool.getConfig().getJdbcUrl();
 		if (jdbcUrl != null && jdbcUrl.startsWith("jdbc:h2:file:")) {
-			properties.setFolder(jdbcUrl.substring("jdbc:h2:file:".length()));
+			String folder = jdbcUrl.substring("jdbc:h2:file:".length());
+			// always show the path? or hide it if its the default?
+//			if (!folder.equals("~/" + pool.getId())) {
+				properties.setFolder(folder);
+//			}
 			return properties;
 		}
 		else {
