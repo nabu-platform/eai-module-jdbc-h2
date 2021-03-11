@@ -35,6 +35,8 @@ import be.nabu.libs.types.properties.UniqueProperty;
 
 public class H2Dialect implements SQLDialect {
 
+	// presumably (written long after the fact), "from" is one of the only keywords you can not set as reserved because it is also used to delimit the select statement
+	// presumably we will end up with a quoted from in the end result which is not what we want
 	private static List<String> reserved = Arrays.asList("interval"); //"from", 
 	
 	public static void main(String...args) throws ParseException {
@@ -137,7 +139,7 @@ public class H2Dialect implements SQLDialect {
 		if (table.equals("~")) {
 			table += parsed.get(counter++).getToken().getContent();
 		}
-		System.out.println("Table: " + table);
+//		System.out.println("Table: " + table);
 		if (!validate(parsed, counter++, "(")) {
 			throw new ParseException("Expecting opening '(' to list the fields", counter);
 		}
@@ -153,7 +155,7 @@ public class H2Dialect implements SQLDialect {
 			}
 			fields.add(parsed.get(counter++).getToken().getContent());
 		}
-		System.out.println("Fields: " + fields);
+//		System.out.println("Fields: " + fields);
 		
 		if (!validate(parsed, counter++, "values")) {
 			throw new ParseException("Expecting fixed string 'values' indicating start of values", counter);
@@ -200,7 +202,7 @@ public class H2Dialect implements SQLDialect {
 				}
 			}
 		}
-		System.out.println("Values: " + values);
+//		System.out.println("Values: " + values);
 		
 		if (!validate(parsed, counter++, "on") || !validate(parsed, counter++, "conflict")) {
 			throw new ParseException("Expecting 'on conflict'", counter);
@@ -224,7 +226,7 @@ public class H2Dialect implements SQLDialect {
 			}
 			conflicts.add(conflict);
 		}
-		System.out.println("Conflicts: " + conflicts);
+//		System.out.println("Conflicts: " + conflicts);
 		
 		if (!validate(parsed, counter++, "do") || !validate(parsed, counter++, "update") || !validate(parsed, counter++, "set")) {
 			throw new ParseException("Expecting 'do update set'", counter);

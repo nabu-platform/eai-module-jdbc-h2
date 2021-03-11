@@ -47,9 +47,6 @@ public class H2FileWizard implements JDBCPoolWizard<H2FileProperties> {
 			if (isNew) {
 				existing.getConfig().setAutoCommit(false);
 			}
-			if (isMain) {
-				existing.getConfig().setContext(project.getId());
-			}
 			if (properties.getFolder() != null && !properties.getFolder().trim().isEmpty()) {
 				existing.getConfig().setJdbcUrl("jdbc:h2:file:" + properties.getFolder());
 			}
