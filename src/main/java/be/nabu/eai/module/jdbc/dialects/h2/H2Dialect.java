@@ -121,7 +121,19 @@ public class H2Dialect implements SQLDialect {
 				throw new RuntimeException(e);
 			}
 		}
+		// it seemed with some basic testing that all() was not supported
+		// so rewrote it to not in
+		// however, another problem occurred around the same time so it may have been due to that
+		// either way, rewriting any to in broke existing queries so we rolled back the rewriting for now
+//		return rewriteAnyAll(rewriteReserved(sql));
 		return rewriteReserved(sql);
+	}
+	
+	// apparently any and all are not supported
+	private static String rewriteAnyAll(String sql) {
+		sql = sql.replaceAll("<>[\\s]*all[\\s]*\\(", "not in (");
+		sql = sql.replaceAll("=[\\s]*any[\\s]*\\(", "in (");
+		return sql;
 	}
 	
 	private static boolean validate(List<QueryPart> tokens, int offset, String value) {
