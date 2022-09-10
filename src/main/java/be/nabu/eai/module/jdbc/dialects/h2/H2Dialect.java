@@ -3,6 +3,8 @@ package be.nabu.eai.module.jdbc.dialects.h2;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -482,4 +484,16 @@ public class H2Dialect implements SQLDialect {
 		}
 		return columnName;
 	}
+
+	@Override
+	public String getEstimateTotalCountQuery(String query) {
+		return "analyze explain " + query;
+	}
+
+	@Override
+	public Long getEstimateTotalCount(ResultSet totalCount) throws SQLException {
+		String result = totalCount.getString(1);
+		return result.matches("^[0-9]+$") ? Long.parseLong(result) : Long.parseLong(result.replaceAll("(?s).*scanCount:[\\s]*([0-9]+).*", "$1"));
+	}
+	
 }

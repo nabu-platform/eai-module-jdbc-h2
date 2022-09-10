@@ -1,5 +1,7 @@
 package be.nabu.eai.module.jdbc.dialects.h2;
 
+import java.util.UUID;
+
 import be.nabu.eai.module.jdbc.pool.JDBCPoolArtifact;
 import be.nabu.eai.module.jdbc.pool.api.JDBCPoolWizard;
 import be.nabu.eai.repository.api.Entry;
@@ -51,7 +53,7 @@ public class H2FileWizard implements JDBCPoolWizard<H2FileProperties> {
 				existing.getConfig().setJdbcUrl("jdbc:h2:file:" + properties.getFolder());
 			}
 			else {
-				existing.getConfig().setJdbcUrl("jdbc:h2:file:~/" + entry.getId());
+				existing.getConfig().setJdbcUrl("jdbc:h2:file:~/" + entry.getId() + "-" + UUID.randomUUID().toString().replace("-", ""));
 			}
 			Class clazz = H2Dialect.class;
 			existing.getConfig().setDialect(clazz);
