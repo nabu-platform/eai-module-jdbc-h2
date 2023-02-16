@@ -40,7 +40,7 @@ public class H2Dialect implements SQLDialect {
 
 	// presumably (written long after the fact), "from" is one of the only keywords you can not set as reserved because it is also used to delimit the select statement
 	// presumably we will end up with a quoted from in the end result which is not what we want
-	private static List<String> reserved = Arrays.asList("interval"); //"from", 
+	private static List<String> reserved = Arrays.asList("interval", "limit"); //"from", 
 	
 	public static void main(String...args) throws ParseException {
 		System.out.println(rewriteMerge("insert into ~nodes (\n" + 
@@ -476,9 +476,6 @@ public class H2Dialect implements SQLDialect {
 	}
 	
 	private static String restrict(String columnName) {
-		if (columnName.length() > 30) {
-			columnName = columnName.substring(0, 30);
-		}
 		if (reserved.indexOf(columnName) >= 0) {
 			columnName = "\"" + columnName + "\"";
 		}
