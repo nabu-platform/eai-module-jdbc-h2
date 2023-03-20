@@ -124,18 +124,21 @@ public class H2Dialect implements SQLDialect {
 				throw new RuntimeException(e);
 			}
 		}
-		// it seemed with some basic testing that all() was not supported
-		// so rewrote it to not in
-		// however, another problem occurred around the same time so it may have been due to that
-		// either way, rewriting any to in broke existing queries so we rolled back the rewriting for now
-//		return rewriteAnyAll(rewriteReserved(sql));
-		return rewriteReserved(sql);
+		// <> all is not supported by h2
+		// we first rewrote it to "not in" and it seemed to work (no exceptions) but it wasn't actually doing anything. my assumption is that it actually does an array equals check rather than an array contains
+		// what _does_ seem to work is "not(ARRAY_CONTAINS(:activeProcessVersionIds, id))" but this is quite the rewrite
+		// what also seems to work is "not(id = any(:activeProcessVersionIds))"
+		// the latter seems more feasible
+		// rewriting any to in broke existing queries so we rolled back the rewriting for now
+		return rewriteAnyAll(rewriteReserved(sql));
+//		return rewriteReserved(sql);
 	}
 	
 	// apparently any and all are not supported
 	private static String rewriteAnyAll(String sql) {
-		sql = sql.replaceAll("<>[\\s]*all[\\s]*\\(", "not in (");
-		sql = sql.replaceAll("=[\\s]*any[\\s]*\\(", "in (");
+//		sql = sql.replaceAll("<>[\\s]*all[\\s]*\\(", " not in (");
+//		sql = sql.replaceAll("=[\\s]*any[\\s]*\\(", "in (");
+		sql = sql.replaceAll("([\\w:]+)[\\s]*<>[\\s]*all[\\s]*\\(([^)]+)\\)", "not($1 = any($2))"); 
 		return sql;
 	}
 	
