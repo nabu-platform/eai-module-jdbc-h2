@@ -362,6 +362,10 @@ public class H2Dialect implements SQLDialect {
 				Integer value = ValueUtils.getValue(MinOccursProperty.getInstance(), child.getProperties());
 				if (value == null || value > 0 || (generatedProperty != null && generatedProperty.getValue() != null && generatedProperty.getValue())) {
 					builder.append(" not null");
+					// for mandatory boolean values, we automatically insert "default false", this makes it easier to add mandatory boolean later on with alter scripts
+					if (Boolean.class.isAssignableFrom(((SimpleType<?>) child.getType()).getInstanceClass())) {
+						builder.append(" default false");
+					}
 				}
 			}
 			
