@@ -155,7 +155,7 @@ public class H2Dialect implements SQLDialect {
 	private static String rewriteAnyAll(String sql) {
 //		sql = sql.replaceAll("<>[\\s]*all[\\s]*\\(", " not in (");
 //		sql = sql.replaceAll("=[\\s]*any[\\s]*\\(", "in (");
-		sql = sql.replaceAll("([\\w:]+)[\\s]*<>[\\s]*all[\\s]*\\(([^)]+)\\)", "not($1 = any($2))"); 
+		sql = sql.replaceAll("([\\w.:]+)[\\s]*<>[\\s]*all[\\s]*\\(([^)]+)\\)", "not($1 = any($2))"); 
 		return sql;
 	}
 	
